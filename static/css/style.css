@@ -1,0 +1,42 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: linear-gradient(135deg, #4566f5 0%, #eedf3a 100%);
+    background-attachment: fixed;
+    background-size: cover; 
+    background-repeat: no-repeat; 
+    background-position: center center; 
+}
+
+main {
+    flex: 1;
+}
+
+.navbar {
+    background: linear-gradient(135deg, #133c9c 0%, #0b61cb 100%) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 0.8rem 0;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+
+footer {
+    margin-top: auto; 
+    flex-shrink: 0; 
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    color: white;
+    padding: 25px 0 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+
+
+
+
+
+
