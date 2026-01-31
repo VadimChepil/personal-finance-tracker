@@ -33,11 +33,14 @@
                                 <i class="bi bi-person-circle me-1"></i>
                                 {{ user.email|truncatechars:20 }}
                             </span>
-                            <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm ms-2">
-                                <i class="bi bi-box-arrow-right me-1"></i>Вийти
-                            </a>
+                            <form method="post" action="{% url 'logout' %}" class="d-inline ms-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-light btn-sm">
+                                    <i class="bi bi-box-arrow-right me-1"></i>Вийти
+                                </button>
+                            </form>
                         {% else %}
-                            <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm me-2">
+                            <a href="{% url 'signin' %}" class="btn btn-outline-light btn-sm me-2">
                                 <i class="bi bi-box-arrow-in-right me-1"></i>Увійти
                             </a>
                             <a href="{% url 'signup' %}" class="btn btn-light btn-sm">
@@ -56,7 +59,7 @@
 
     <footer class="mt-5 py-3 bg-light text-center">
         <div class="container">
-            <p class="mb-0">© 2024 Фінансовий трекер. Усі права захищено.</p>
+            <p class="mb-0">© 2026 Фінансовий трекер. Усі права захищено.</p>
         </div>
     </footer>
 

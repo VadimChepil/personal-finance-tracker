@@ -5,6 +5,8 @@ html, body {
 }
 
 body {
+    display: flex;
+    flex-direction: column;
     background: linear-gradient(135deg, #4566f5 0%, #eedf3a 100%);
     background-attachment: fixed;
     background-size: cover; 
@@ -34,6 +36,9 @@ footer {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.card-body input {
+    width: 100%;
+}
 
 
 
