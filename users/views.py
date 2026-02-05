@@ -8,7 +8,7 @@ from .forms import SignUpForm, SignInForm
 
 class SignUpView(CreateView):
     form_class = SignUpForm 
-    template_name = 'authentication/registration.html'
+    template_name = 'auth/registration.html'
     success_url = reverse_lazy('home')
 
     def dispatch(self, request, *args, **kwargs):
@@ -24,7 +24,7 @@ class SignUpView(CreateView):
 
 class SignInView(FormView):
     form_class = SignInForm
-    template_name = 'authentication/login.html'
+    template_name = 'auth/login.html'
     success_url = reverse_lazy('home')
 
     def dispatch(self, request, *args, **kwargs):

@@ -1,0 +1,15 @@
+.table-color {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.alert ul {
+    padding-left: 1.5rem;
+}
+
+.btn-danger {
+    padding-left: 2rem;
+    padding-right: 2rem;
+}

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %} 
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/finances/convert.css' %}">
+{% endblock %}
+
+{% block title %}Конвертер валют{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calculator me-2"></i>Конвертер валют
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form id="converterForm" method="post"  data-converter-url="{% url 'finances:currency_converter' %}">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label for="amount" class="form-label">Сума</label>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       step="0.01" min="0" value="100" required>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="from_currency" class="form-label">З валюти</label>
+                                <select class="form-select" id="from_currency" name="from_currency">
+                                    <option value="UAH">UAH - Гривня</option>
+                                    <option value="USD" selected>USD - Долар США</option>
+                                    <option value="EUR">EUR - Євро</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-1 d-flex align-items-end justify-content-center">
+                                <button type="button" class="btn btn-outline-secondary" id="swapCurrencies">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="to_currency" class="form-label">В валюту</label>
+                                <select class="form-select" id="to_currency" name="to_currency">
+                                    <option value="UAH" selected>UAH - Гривня</option>
+                                    <option value="USD">USD - Долар США</option>
+                                    <option value="EUR">EUR - Євро</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-success px-5" id="convertBtn">
+                                <i class="bi bi-calculator me-2"></i>Конвертувати
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-4 text-center" id="result" style="display: none;">
+                        <div class="alert alert-success">
+                            <h5 class="mb-0" id="resultText"></h5>
+                        </div>
+                    </div>
+                    
+                    {% if exchange_rates %}
+                    <div class="mt-4 pt-4 border-top">
+                        <h6><i class="bi bi-info-circle me-2"></i>Поточні курси валют (до USD):</h6>
+                        <div class="row mt-2">
+                            {% for currency, rate in exchange_rates.items %}
+                            <div class="col-md-4 mb-2">
+                                <span class="badge bg-secondary">{{ currency }}: {{ rate|floatformat:4 }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Оновлено: сьогодні</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/finances/converter.js' %}"></script>
+{% endblock %}

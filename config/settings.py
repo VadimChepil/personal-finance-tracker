@@ -10,6 +10,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-4=jzkd=ykk401b@mu(bv%zl5)0#%-9onteot*b-thzcgjdn26l'
 
+
+OPENEXCHANGERATES_API_KEY = '1802d08c98e54a86a128ee70d57d9e35'
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -26,6 +29,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users',
+    'finances',
 ]
 
 AUTH_USER_MODEL = 'users.User'

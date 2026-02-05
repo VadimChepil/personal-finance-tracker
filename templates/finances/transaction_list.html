@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static %} 
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/finances/transactions/list.css' %}">
+{% endblock %}
+
+{% block title %}Транзакції{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-currency-exchange me-2"></i>Транзакції</h1>
+        <a href="{% url 'finances:transaction_create' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle me-1"></i>Додати транзакцію
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Фільтри та пошук</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Пошук по назві</label>
+                    <input type="text" class="form-control" name="search" id="search" 
+                           placeholder="Введіть текст для пошуку..." value="{{ request.GET.search|default:'' }}">
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="date_from" class="form-label">Дата від</label>
+                    <input type="date" class="form-control" name="date_from" id="date_from" 
+                           value="{{ request.GET.date_from|default:'' }}">
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="date_to" class="form-label">Дата до</label>
+                    <input type="date" class="form-control" name="date_to" id="date_to" 
+                           value="{{ request.GET.date_to|default:'' }}">
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="category" class="form-label">Категорія</label>
+                    <select class="form-select" name="category" id="category">
+                        <option value="">Всі категорії</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" 
+                                {% if request.GET.category == category.id|stringformat:"i" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="currency" class="form-label">Валюта</label>
+                    <select class="form-select" name="currency" id="currency">
+                        <option value="">Всі валюти</option>
+                        <option value="UAH" {% if request.GET.currency == 'UAH' %}selected{% endif %}>UAH</option>
+                        <option value="USD" {% if request.GET.currency == 'USD' %}selected{% endif %}>USD</option>
+                        <option value="EUR" {% if request.GET.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                    </select>
+                </div>
+                
+                <div class="col-12">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-filter me-1"></i>Застосувати фільтри
+                        </button>
+                        <a href="{% url 'finances:transaction_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Скинути
+                        </a>
+                        {% if request.GET %}
+                        <span class="ms-auto text-muted align-self-center">
+                            Знайдено: {{ transactions|length }} транзакцій
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+   {% if transactions %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Загальна статистика:</h6>
+                            <div class="mt-2">
+                                {% for amount_data in transaction_amounts %}
+                                <span class="badge bg-primary me-2 mb-1">
+                                    {{ amount_data.amount|floatformat:2 }} {{ amount_data.currency }}
+                                </span>
+                                {% endfor %}
+                                <span class="text-muted ms-2">Всього: {{ transactions|length }} транзакцій</span>
+                            </div>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" 
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-calculator me-1"></i>Конвертувати
+                            </button>
+                            <ul class="dropdown-menu">
+                                {% with current_params=request.GET.urlencode %}
+                                <li><a class="dropdown-item" href="?{{ current_params }}&convert_to=UAH">
+                                    <i class="bi bi-currency-exchange me-2"></i>В гривні (UAH)
+                                </a></li>
+                                <li><a class="dropdown-item" href="?{{ current_params }}&convert_to=USD">
+                                    <i class="bi bi-currency-dollar me-2"></i>В доларах (USD)
+                                </a></li>
+                                <li><a class="dropdown-item" href="?{{ current_params }}&convert_to=EUR">
+                                    <i class="bi bi-currency-euro me-2"></i>В євро (EUR)
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'finances:transaction_list' %}?{{ current_params|cut:'convert_to='|cut:'&convert_to=' }}">
+                                    <i class="bi bi-x-circle me-2"></i>Скинути конвертацію
+                                </a></li>
+                                {% endwith %}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Conversion unit -->
+                    {% if converted_transaction_amounts %}
+                    <div class="mt-3 p-3 bg-white rounded border">
+                        <h6 class="mb-2">
+                            <i class="bi bi-check-circle me-2 text-success"></i>
+                            Всі суми конвертовано в {{ target_currency }}:
+                        </h6>
+                        <div class="mb-2">
+                            {% for conv_data in converted_transaction_amounts %}
+                            <span class="badge bg-info me-2 mb-1">
+                                {{ conv_data.original_amount|floatformat:2 }} {{ conv_data.original_currency }}
+                                →
+                                {{ conv_data.converted_amount|floatformat:2 }} {{ target_currency }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-2">
+                            <strong class="text-success">
+                                Загальна сума: {{ total_converted|floatformat:2 }} {{ target_currency }}
+                            </strong>
+                        </div>
+                    </div>
+                    {% endif %}
+                        
+                        <!-- Currency exchange rates -->
+                        {% if exchange_rates %}
+                        <div class="mt-3 pt-3 border-top">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Курси валют (до USD): 
+                                {% for currency, rate in exchange_rates.items %}
+                                    {% if currency != 'USD' %}
+                                    <span class="ms-2">{{ currency }}: {{ rate|floatformat:4 }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                                <br>
+                                <small>Оновлено: сьогодні</small>
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% elif exchange_rates %}
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Курси валют (до USD): 
+                            {% for currency, rate in exchange_rates.items %}
+                                {% if currency != 'USD' %}
+                                <span class="ms-2">{{ currency }}: {{ rate|floatformat:4 }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- List of transactions -->
+    <div class="card shadow">
+        <div class="card-body">
+            {% if transactions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Сума</th>
+                            <th>Опис</th>
+                            <th>Категорії</th>
+                            <th>Таблиця</th>
+                            <th class="text-end">Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ transaction.date|date:"d.m.Y" }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">
+                                    {{ transaction.amount }} {{ transaction.currency }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if transaction.description %}
+                                <span title="{{ transaction.description }}">
+                                    {{ transaction.description|truncatechars:40 }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">Без опису</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% for category in transaction.categories.all %}
+                                <span class="badge bg-secondary me-1">{{ category.name }}</span>
+                                {% empty %}
+                                <span class="text-muted">—</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="table-color me-2"></span>
+                                    {{ transaction.table.title }}
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'finances:transaction_edit' transaction.pk %}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'finances:transaction_delete' transaction.pk %}" 
+                                       class="btn btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Навігація по сторінках" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            Перша
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Сторінка {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            Остання
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-receipt" style="font-size: 4rem; color: #6c757d;"></i>
+                </div>
+                <h3 class="text-muted mb-3">
+                    {% if request.GET %}
+                    Транзакції не знайдено
+                    {% else %}
+                    Немає транзакцій
+                    {% endif %}
+                </h3>
+                <p class="text-muted mb-4">
+                    {% if request.GET %}
+                    Спробуйте змінити параметри пошуку
+                    {% else %}
+                    Створіть свою першу транзакцію
+                    {% endif %}
+                </p>
+                <a href="{% url 'finances:transaction_create' %}" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-2"></i>Додати транзакцію
+                </a>
+                {% if request.GET %}
+                <a href="{% url 'finances:transaction_list' %}" class="btn btn-outline-secondary ms-2">
+                    Показати всі
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/finances/transactions.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %} 
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/finances/tables/confirm_delete.css' %}">
+{% endblock %}
+
+
+{% block title %}Видалити таблицю{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Підтвердження видалення
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="bi bi-trash" style="font-size: 4rem; color: #dc3545;"></i>
+                        </div>
+                        <h5 class="card-title">Ви впевнені, що хочете видалити цю таблицю?</h5>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="table-color me-3" 
+                                     style="background-color: {{ object.color|default:'#3B82F6' }}"></div>
+                                <h6 class="mb-0">{{ object.title }}</h6>
+                            </div>
+                            <p class="mb-2">
+                                <i class="bi bi-calendar me-2"></i>
+                                <small class="text-muted">Створено: {{ object.created_at|date:"d.m.Y H:i" }}</small>
+                            </p>
+                            <p class="mb-0">
+                                <i class="bi bi-list-check me-2"></i>
+                                <small class="text-muted">Транзакцій: {{ object.transactions.count }}</small>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-circle me-2"></i>
+                        <strong>Увага!</strong> Ця дія є незворотною. Разом з таблицею будуть видалені:
+                        <ul class="mb-0 mt-2">
+                            <li>Всі транзакції в цій таблиці ({{ object.transactions.count }} шт.)</li>
+                            <li>Вся статистика та історія витрат</li>
+                        </ul>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'finances:table_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Скасувати
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-1"></i>Так, видалити
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

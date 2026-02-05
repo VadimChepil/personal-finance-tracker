@@ -1,0 +1,15 @@
+#swapCurrencies {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.alert-success {
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+    color: #0f5132;
+}
+
+.badge {
+    font-size: 0.9em;
+    padding: 0.5em 0.8em;
+}

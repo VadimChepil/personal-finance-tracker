@@ -1,0 +1,13 @@
+.card {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.8em;
+}
+
+.btn-danger {
+    padding-left: 2rem;
+    padding-right: 2rem;
+} 

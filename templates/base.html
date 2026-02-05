@@ -8,14 +8,15 @@
     <title>{% block title %}Фінансовий трекер{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-            <div class="container">
-
-                <a class="navbar-brand" href="{% url 'home' %}">
+            <div class="container-fluid">
+                 <a class="navbar-brand" href="{% url 'home' %}">
                     <i class="bi bi-cash-coin me-2"></i>
                     Фінансовий Трекер
                 </a>
@@ -23,9 +24,37 @@
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                
+
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto"></ul>
+                    {% if user.is_authenticated %}
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" 
+                            href="{% url 'finances:dashboard' %}">
+                                <i class="bi bi-speedometer2 me-1"></i>Головна панель
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/tables' in request.path %}active{% endif %}" 
+                            href="{% url 'finances:table_list' %}">
+                                <i class="bi bi-table me-1"></i>Таблиці
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/transactions' in request.path %}active{% endif %}" 
+                            href="{% url 'finances:transaction_list' %}">
+                                <i class="bi bi-currency-exchange me-1"></i>Транзакції
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/currency-converter' in request.path %}active{% endif %}" 
+                            href="{% url 'finances:currency_converter' %}">
+                                <i class="bi bi-calculator me-1"></i>Конвертер
+                            </a>
+                        </li>
+                    </ul>
+                    {% endif %}
                     
                     <div class="navbar-nav">
                         {% if user.is_authenticated %}
@@ -64,6 +93,6 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block scripts %}{% endblock %}
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

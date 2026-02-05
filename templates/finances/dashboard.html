@@ -1,0 +1,142 @@
+{% extends 'base.html' %} 
+{% load static %} 
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/finances/dashboard.css' %}">
+{% endblock %}
+
+
+{% block title %}Головна панель{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-speedometer2 me-2"></i>Головна панель</h1>
+    <div>
+        <a href="{% url 'finances:table_create' %}" class="btn btn-primary me-2">
+            <i class="bi bi-plus-circle me-1"></i>Нова таблиця
+        </a>
+        <a href="{% url 'finances:transaction_create' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle me-1"></i>Нова транзакція
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Statistics -->
+    <div class="col-md-4 mb-3">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-cash-stack me-2"></i>Загальні витрати</h5>
+                <h2 class="card-text">{{ total_expenses|default:0|floatformat:2 }} грн</h2>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-table me-2"></i>Таблиці</h5>
+                <h2 class="card-text">{{ tables.count }}</h2>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card stat-card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-list-check me-2"></i>Транзакції</h5>
+                <h2 class="card-text">{{ recent_transactions|length }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Latest transactions -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Останні транзакції</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Сума</th>
+                                <th>Опис</th>
+                                <th>Категорія</th>
+                                <th>Таблиця</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_transactions %}
+                            <tr>
+                                <td>{{ transaction.date|date:"d.m.Y" }}</td>
+                                <td>
+                                    <span class="badge bg-primary currency-badge">
+                                        {{ transaction.amount }} {{ transaction.currency }}
+                                    </span>
+                                </td>
+                                <td>{{ transaction.description|default:"Без опису"|truncatechars:30 }}</td>
+                                <td>
+                                {% for category in transaction.categories.all %}
+                                <span class="badge bg-secondary me-1">{{ category.name }}</span>
+                                {% empty %}
+                                <span class="text-muted">—</span>
+                                {% endfor %}
+                                </td>
+                                    <td>
+                                        <span class="table-color"></span>
+                                        {{ transaction.table.title }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{% url 'finances:transaction_list' %}" class="btn btn-outline-primary btn-sm">
+                    Всі транзакції <i class="bi bi-arrow-right"></i>
+                </a>
+                {% else %}
+                <p class="text-muted">Немає транзакцій. Створіть першу!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- My tables -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-table me-2"></i>Мої таблиці</h5>
+            </div>
+            <div class="card-body">
+                {% if tables %}
+                <div class="list-group">
+                    {% for table in tables|slice:":5" %}
+                    <a href="{% url 'finances:transaction_list' %}?table={{ table.id }}" 
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="table-color"></span>
+                            {{ table.title }}
+                        </div>
+                        <span class="badge bg-primary rounded-pill">
+                            {{ table.transactions.count }}
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'finances:table_list' %}" class="btn btn-outline-primary btn-sm mt-3">
+                    Всі таблиці <i class="bi bi-arrow-right"></i>
+                </a>
+                {% else %}
+                <p class="text-muted">Немає таблиць. Створіть першу!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

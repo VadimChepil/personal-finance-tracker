@@ -1,0 +1,29 @@
+.table-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.pagination .page-link {
+    border-radius: 4px;
+    margin: 0 2px;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+.card {
+    border: none;
+}
+
+.table th {
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+} 

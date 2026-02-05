@@ -1,0 +1,21 @@
+.form-control-color {
+    height: 40px;
+    width: 60px;
+    padding: 2px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.form-control-color:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.invalid-feedback {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+}

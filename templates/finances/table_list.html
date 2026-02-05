@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %} 
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/finances/tables/list.css' %}">
+{% endblock %}
+
+
+{% block title %}Мої таблиці{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-table me-2"></i>Мої таблиці</h1>
+        <a href="{% url 'finances:table_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Створити таблицю
+        </a>
+    </div>
+
+    {% if tables %}
+    <div class="row">
+        {% for table in tables %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="table-color" style="background-color: {{ table.color }}">
+                        
+                    </div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex align-items-center">
+                            <h5 class="card-title mb-0">{{ table.title }}</h5>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                    data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'finances:transaction_create' %}?table={{ table.id }}">
+                                        <i class="bi bi-plus-circle me-2"></i>Додати транзакцію
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'finances:table_edit' table.pk %}">
+                                        <i class="bi bi-pencil me-2"></i>Редагувати
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'finances:table_delete' table.pk %}">
+                                        <i class="bi bi-trash me-2"></i>Видалити
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <p class="card-text text-muted mb-2">
+                        <small>Створено: {{ table.created_at|date:"d.m.Y H:i" }}</small>
+                    </p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-list-check me-1"></i>{{ table.transactions.count }} транзакцій
+                        </span>
+                        <a href="{% url 'finances:transaction_list' %}?table={{ table.id }}" 
+                           class="btn btn-outline-primary btn-sm">
+                            Переглянути <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="bi bi-table" style="font-size: 4rem; color: #6c757d;"></i>
+        </div>
+        <h3 class="text-muted mb-3">У вас ще немає таблиць</h3>
+        <p class="text-muted mb-4">Створіть свою першу таблицю для відстеження витрат</p>
+        <a href="{% url 'finances:table_create' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle me-2"></i>Створити першу таблицю
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
