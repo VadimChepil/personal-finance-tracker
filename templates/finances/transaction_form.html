@@ -22,14 +22,6 @@
                 <form method="post" novalidate>
                     {% csrf_token %}
                     
-                    {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {% for error in form.non_field_errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                    
                     <!-- Field Table -->
                     {% if form.table %}
                     <div class="mb-4">
@@ -100,6 +92,50 @@
                         <div class="form-text">Дата здійснення транзакції</div>
                     </div>
                     
+                    <!-- Hidden field for category ID -->
+                    <input type="hidden" name="category_id" id="id_category_id" value="{{ form.category_id.value|default:'' }}">
+
+                    <!-- Field Category -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Категорія</label>
+
+                        <!-- No Category option -->
+                        <div class="category-main p-2 border rounded mb-2
+                             {% if not form.instance.category %}active{% endif %}"
+                             data-id=""
+                             onclick="selectCategory(this)">
+                            Без категорії
+                        </div>
+
+                        {% for category in categories_hierarchy %}
+                        <div class="category-item mb-3">
+
+                            <!-- Main Category -->
+                            <div class="category-main p-2 border rounded fw-bold"
+                                 data-id="{{ category.id }}"
+                                 onclick="selectCategory(this); toggleSubcategories({{ forloop.counter0 }})">
+                                {{ category.name }}
+                            </div>
+
+                            <!-- Subcategories -->
+                            <div class="subcategories mt-2 ms-3"
+                                 id="subcategories_{{ forloop.counter0 }}"
+                                 style="display:none">
+
+                                {% for child in category.children %}
+                                <div class="subcategory-item p-2 mb-1 border rounded
+                                     {% if form.instance.category.id == child.id %}active{% endif %}"
+                                     data-id="{{ child.id }}"
+                                     onclick="selectCategory(this)">
+                                    {{ child.name }}
+                                </div>
+                                {% endfor %}
+
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                                        
                     <!-- Field Description -->
                     <div class="mb-4">
                         <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
@@ -113,41 +149,10 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                        <div class="form-text">Додатковий опис транзакції (необов'язково)</div>
-                    </div>
-                    
-                    <!-- Field Categories -->
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">
-                            {{ form.categories.label }}
-                        </label>
-                          <div class="border rounded p-3">
-                            <div class="row g-2">
-                                {% for checkbox in form.categories %}
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="category-item d-flex align-items-center justify-content-between p-2 bg-light rounded">
-                                        <span class="fw-medium">{{ checkbox.choice_label }}</span>
-                                        <div class="form-check">
-                                            {{ checkbox.tag }}
-                                            <label class="form-check-label" for="{{ checkbox.id_for_label }}"></label>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% empty %}
-                                <div class="col-12">
-                                    <p class="text-muted mb-0">Немає доступних категорій</p>
-                                </div>
-                                {% endfor %}
-                            </div>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Детальний опис транзакції. Наприклад: "Заправка на АЗС ОККО", "Купівля продуктів в АТБ"
                         </div>
-                        {% if form.categories.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.categories.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        <div class="form-text">Оберіть одну або декілька категорій (необов'язково)</div>
                     </div>
                     
                     <div class="d-flex justify-content-between mt-4">
@@ -164,4 +169,62 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectCategory(element) {
+    const categoryId = element.dataset.id || '';
+
+    // Store category ID in hidden input
+    document.getElementById('id_category_id').value = categoryId;
+
+    // Remove active class from all category elements
+    document.querySelectorAll('.category-main, .subcategory-item')
+        .forEach(el => el.classList.remove('active'));
+
+    // Add active class to selected element
+    element.classList.add('active');
+
+    // If subcategory selected, highlight its main category
+    if (element.classList.contains('subcategory-item')) {
+        const mainCat = element.closest('.subcategories').previousElementSibling;
+        if (mainCat) mainCat.classList.add('active');
+    }
+}
+
+function toggleSubcategories(index) {
+    const allSubs = document.querySelectorAll('.subcategories');
+    allSubs.forEach((el, i) => {
+        if (i === index) {
+           // Toggle current subcategory list
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        } else {
+            // Hide all other subcategory lists
+            el.style.display = 'none';
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // If editing and subcategory is selected
+    const activeSub = document.querySelector('.subcategory-item.active');
+    if (activeSub) {
+        const sub = activeSub.closest('.subcategories');
+        if (sub) {
+            sub.style.display = 'block';
+            const mainCat = sub.previousElementSibling;
+            if (mainCat) mainCat.classList.add('active');
+        }
+    } else {
+        // If main category is selected
+        const activeMain = document.querySelector('.category-main.active');
+        if (activeMain) {
+            const index = Array.from(document.querySelectorAll('.category-main')).indexOf(activeMain);
+            const sub = document.getElementById(`subcategories_${index}`);
+            if (sub) sub.style.display = 'block';
+        }
+    }
+});
+</script>
 {% endblock %}

@@ -82,11 +82,24 @@
                                 </td>
                                 <td>{{ transaction.description|default:"Без опису"|truncatechars:30 }}</td>
                                 <td>
-                                {% for category in transaction.categories.all %}
-                                <span class="badge bg-secondary me-1">{{ category.name }}</span>
-                                {% empty %}
-                                <span class="text-muted">—</span>
-                                {% endfor %}
+                                    {% if transaction.category %}
+                                    <div class="d-flex align-items-center">
+                                        {% if transaction.category.parent %}
+                                            <span class="badge bg-primary" title="Головна категорія">
+                                                {{ transaction.category.parent.name }}
+                                            </span>
+                                            <span class="badge bg-secondary">
+                                                {{ transaction.category.name }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-primary">
+                                                {{ transaction.category.name }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
                                 </td>
                                     <td>
                                         <span class="table-color"></span>

@@ -19,9 +19,11 @@ class Migration(migrations.Migration):
             name='Category',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, unique=True, verbose_name='Назва категорії')),
+                ('name', models.CharField(max_length=100, verbose_name='Назва категорії')),
                 ('description', models.TextField(blank=True, verbose_name='Опис категорії')),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Дата створення')),
+                ('is_default', models.BooleanField(default=False, verbose_name='Категорія за замовчуванням')),
+                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='children', to='finances.category', verbose_name='Батьківська категорія')),
             ],
             options={
                 'verbose_name': 'Категорія',

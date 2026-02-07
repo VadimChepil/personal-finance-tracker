@@ -25,18 +25,15 @@ class TableForm(forms.ModelForm):
 
 
 class TransactionForm(forms.ModelForm):
-    categories = forms.ModelMultipleChoiceField(
-        queryset=Category.objects.all(),
-        widget=forms.CheckboxSelectMultiple(attrs={
-            'class': 'form-check-input'
-        }),
+    category_id = forms.CharField(
         required=False,
-        label='Категорії'
+        widget=forms.HiddenInput(),
+        initial=''
     )
     
     class Meta:
         model = Transaction
-        fields = ['table', 'amount', 'currency', 'date', 'description', 'categories']  
+        fields = ['table', 'amount', 'currency', 'date', 'description', 'category_id']
         widgets = {
             'table': forms.Select(attrs={
                 'class': 'form-control'
@@ -75,41 +72,47 @@ class TransactionForm(forms.ModelForm):
             self.fields['table'].queryset = Table.objects.filter(user=user)
             self.fields['table'].required = True
             self.fields['table'].empty_label = "Оберіть таблицю"
+        
+        if self.instance and self.instance.category:
+            self.fields['category_id'].initial = str(self.instance.category.id)
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        category_id = self.cleaned_data.get('category_id')
+        
+        if category_id:
+            try:
+                category = Category.objects.get(id=category_id)
+                instance.category = category
+            except Category.DoesNotExist:
+                instance.category = None
+        else:
+            instance.category = None
+        
+        if commit:
+            instance.save()
+            self.save_m2m()
+        
+        return instance
 
 
 class TransactionFilterForm(forms.Form):
-    search = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Пошук по назві...'
-        })
-    )
-    date_from = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={
-            'class': 'form-control',
-            'type': 'date'
-        }),
-        label='Від'
-    )
-    date_to = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={
-            'class': 'form-control',
-            'type': 'date'
-        }),
-        label='До'
-    )
+    search = forms.CharField(required=False)
+    date_from = forms.DateField(required=False)
+    date_to = forms.DateField(required=False)
+
     category = forms.ModelChoiceField(
-        queryset=Category.objects.all(),
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        label='Категорія'
+        queryset=Category.objects.filter(parent__isnull=True),
+        required=False
     )
+
+    subcategory = forms.ModelChoiceField(
+        queryset=Category.objects.filter(parent__isnull=False),
+        required=False
+    )
+
     currency = forms.ChoiceField(
         choices=[('', 'Всі валюти')] + Transaction.CURRENCY_CHOICES,
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        label='Валюта'
+        required=False
     )

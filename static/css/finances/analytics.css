@@ -1,0 +1,24 @@
+.chart-container {
+        position: relative;
+        height: 400px;
+        margin-bottom: 30px;
+    }
+    .summary-card {
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .total-expenses { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .average-expense { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .most-expensive { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .category-count { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    
+    .time-filter {
+        max-width: 300px;
+    }
+    .currency-badge {
+        font-size: 1.2rem;
+        padding: 0.3rem 0.8rem;
+        margin-left: 0.5rem;
+    }

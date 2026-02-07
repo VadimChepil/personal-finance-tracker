@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Аналітика витрат{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/finances/analytics.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-6 mb-4">
+                <i class="bi bi-bar-chart-fill text-primary me-2"></i>Аналітика витрат
+                <span class="currency-badge badge bg-primary">Всі суми в гривнях (₴)</span>
+            </h1>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <form method="get" class="time-filter">
+                <label class="form-label">Період:</label>
+                <div class="input-group">
+                    <select name="period" class="form-select" onchange="this.form.submit()">
+                        <option value="30" {% if period == '30' %}selected{% endif %}>Останні 30 днів</option>
+                        <option value="7" {% if period == '7' %}selected{% endif %}>Останні 7 днів</option>
+                        <option value="90" {% if period == '90' %}selected{% endif %}>Останні 3 місяці</option>
+                        <option value="365" {% if period == '365' %}selected{% endif %}>Останній рік</option>
+                        <option value="all" {% if period == 'all' %}selected{% endif %}>Весь період</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-filter"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <div class="info-box bg-light p-3 rounded">
+                <h6><i class="bi bi-clock-history me-2"></i>Період аналізу:</h6>
+                <p class="mb-0">
+                    {% if period == '7' %}
+                        Останні 7 днів
+                    {% elif period == '30' %}
+                        Останні 30 днів
+                    {% elif period == '90' %}
+                        Останні 3 місяці
+                    {% elif period == '365' %}
+                        Останній рік
+                    {% else %}
+                        Весь доступний період
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="info-box bg-light p-3 rounded">
+                <h6><i class="bi bi-graph-up me-2"></i>Загальна статистика:</h6>
+                <p class="mb-0">
+                    {{ transaction_count }} транзакцій, {{ category_count }} категорій
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="summary-card total-expenses text-white">
+                <h5><i class="bi bi-cash-stack me-2"></i>Загальні витрати</h5>
+                <h2>{{ total_amount|floatformat:2 }} ₴</h2>
+                <p class="mb-0">За вибраний період</p>
+                <small>Усі валюти конвертовано в гривні</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="summary-card average-expense text-white">
+                <h5><i class="bi bi-graph-up me-2"></i>Середня витрата</h5>
+                <h2>{{ average_amount|floatformat:2 }} ₴</h2>
+                <p class="mb-0">На транзакцію</p>
+                <small>Середнє значення</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="summary-card most-expensive text-white">
+                <h5><i class="bi bi-arrow-up-right-circle me-2"></i>Найбільша</h5>
+                <h2>{{ max_amount|floatformat:2 }} ₴</h2>
+                <p class="mb-0">Максимальна транзакція</p>
+                <small>Після конвертації</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="summary-card category-count text-white">
+                <h5><i class="bi bi-tags me-2"></i>Активні категорії</h5>
+                <h2>{{ category_count }}</h2>
+                <p class="mb-0">Використано категорій</p>
+                <small>З урахуванням транзакцій</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pie-chart-fill me-2"></i>Витрати по категоріях (₴)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div class="mt-2 text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Показує розподіл витрат за категоріями після конвертації в гривні
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-week me-2"></i>Витрати по місяцях (₴)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                    <div class="mt-2 text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Динаміка витрат у гривнях з часом
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-currency-exchange me-2"></i>Розподіл по валютах (оригінальний)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="currencyChart"></canvas>
+                    </div>
+                    <div class="mt-2 text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Показує у яких валютах були здійснені транзакції (до конвертації)
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table me-2"></i>Витрати по таблицях (₴)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="tableChart"></canvas>
+                    </div>
+                    <div class="mt-2 text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Розподіл конвертованих витрат між вашими таблицями
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul me-2"></i>Детальна статистика по категоріях (₴)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if category_stats %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Категорія</th>
+                                    <th>Сума витрат (₴)</th>
+                                    <th>Кількість транзакцій</th>
+                                    <th>Середня сума (₴)</th>
+                                    <th>% від загальних витрат</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in category_stats %}
+                                <tr>
+                                    <td>
+                                        <span class="badge" style="background-color: {{ stat.color }}; color: white">
+                                            {{ stat.name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ stat.total|floatformat:2 }} ₴</strong>
+                                        {% if stat.count > 0 %}
+                                        <br>
+                                        <small class="text-muted">
+                                            {{ stat.count }} транзакцій
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ stat.count }}</td>
+                                    <td>{{ stat.average|floatformat:2 }} ₴</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 20px;">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     style="width: {{ stat.percentage }}%; background-color: {{ stat.color }};">
+                                                    {{ stat.percentage|floatformat:1 }}%
+                                                </div>
+                                            </div>
+                                            <span class="text-muted small">
+                                                {{ stat.percentage|floatformat:1 }}%
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th>Всього:</th>
+                                    <th>{{ total_amount|floatformat:2 }} ₴</th>
+                                    <th>{{ transaction_count }}</th>
+                                    <th>{{ average_amount|floatformat:2 }} ₴</th>
+                                    <th>100%</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-bar-chart display-1 text-muted mb-3"></i>
+                        <h4 class="text-muted">Немає даних для аналізу</h4>
+                        <p class="text-muted">Створіть транзакції, щоб побачити статистику</p>
+                        <a href="{% url 'finances:transaction_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Створити транзакцію
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="bi bi-currency-exchange me-2"></i>Про конвертацію валют</h5>
+                <p class="mb-2">Для коректного порівняння всі транзакції конвертовано в гривні за поточним курсом.</p>
+                <p class="mb-0 small"> Щоб переглянути поточний курс переходь сюди 
+                    <a href="{% url 'finances:currency_converter' %}" 
+                        class="btn btn-link">
+                            Конвертер
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/finances/analytics.js' %}"></script>
+<script type="application/json" id="chart-data">
+{
+    "category_labels": {{ category_labels|safe }},
+    "category_data": {{ category_data|safe }},
+    "monthly_labels": {{ monthly_labels|safe }},
+    "monthly_data": {{ monthly_data|safe }},
+    "currency_labels": {{ currency_labels|safe }},
+    "currency_data": {{ currency_data|safe }},
+    "table_labels": {{ table_labels|safe }},
+    "table_data": {{ table_data|safe }}
+}
+</script>
+{% endblock %}

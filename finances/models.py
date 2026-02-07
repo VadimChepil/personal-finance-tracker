@@ -1,8 +1,6 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-from django.db.models.signals import post_migrate
-from django.dispatch import receiver
 
 
 class Table(models.Model):
@@ -39,12 +37,15 @@ class Table(models.Model):
 class Category(models.Model):
     name = models.CharField(
         max_length=100,
-        unique=True,
         verbose_name='Назва категорії'
     )
-    description = models.TextField(
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        related_name='children',
+        null=True,
         blank=True,
-        verbose_name='Опис категорії'
+        verbose_name='Батьківська категорія'
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -55,9 +56,35 @@ class Category(models.Model):
         verbose_name = 'Категорія'
         verbose_name_plural = 'Категорії'
         ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'parent'],
+                name='unique_category_name_parent'
+            )
+        ]
 
     def __str__(self):
+        if self.parent:
+            return f"{self.parent.name} → {self.name}"
         return self.name
+    
+    @property
+    def level(self):
+        if self.parent:
+            return self.parent.level + 1
+        return 0
+    
+    @property
+    def is_root(self):
+        return self.parent is None
+    
+    def get_full_path(self):
+        path = []
+        current = self
+        while current:
+            path.insert(0, current.name)
+            current = current.parent
+        return ' → '.join(path)
 
 
 class Transaction(models.Model):
@@ -88,11 +115,13 @@ class Transaction(models.Model):
         related_name='transactions',
         verbose_name='Таблиця'
     )
-    categories = models.ManyToManyField(
+    category = models.ForeignKey(
         Category,
+        on_delete=models.SET_NULL,
         related_name='transactions',
+        null=True,
         blank=True,
-        verbose_name='Категорії'
+        verbose_name='Категорія'
     )
     description = models.TextField(
         blank=True,
@@ -116,78 +145,88 @@ class Transaction(models.Model):
         return f"{self.amount} {self.currency} - {self.date}"
 
 
-# Функція для створення дефолтних категорій
 def create_default_categories(apps, schema_editor):
     Category = apps.get_model('finances', 'Category')
     
     default_categories = [
         {
             'name': 'Продукти',
-            'description': 'Витрати на продукти харчування'
-        },
-        {
-            'name': 'Авто',
-            'description': 'Витрати на автомобіль: пальне, ремонт, страховка'
-        },
-        {
-            'name': 'Одяг',
-            'description': 'Витрати на одяг та взуття'
-        },
-        {
-            'name': 'Розваги',
-            'description': 'Витрати на розваги та відпочинок'
-        },
-        {
-            'name': "Здоров'я",  
-            'description': "Витрати на медицину та здоров'я"  
-        },
-        {
-            'name': 'Комунальні',
-            'description': 'Оплата комунальних послуг'
+            'children': [
+                {'name': 'Супермаркет'},
+                {'name': 'Ринок'},
+                {'name': 'М\'ясо'},
+                {'name': 'Овочі/Фрукти'},
+            ]
         },
         {
             'name': 'Транспорт',
-            'description': 'Витрати на громадський транспорт'
+            'children': [
+                {'name': 'Пальне'},
+                {'name': 'Ремонт'},
+                {'name': 'Страховка'},
+                {'name': 'Парковка'},
+            ]
+        },
+        {
+            'name': 'Розваги',
+            'children': [
+                {'name': 'Кіно'},
+                {'name': 'Ресторани'},
+                {'name': 'Подорожі'},
+                {'name': 'Хобі'},
+            ]
+        },
+        {
+            'name': 'Житло',
+            'children': [
+                {'name': 'Оренда'},
+                {'name': 'Комунальні'},
+                {'name': 'Інтернет'},
+                {'name': 'Меблі'},
+            ]
+        },
+        {
+            'name': 'Здоров\'я',
+            'children': [
+                {'name': 'Ліки'},
+                {'name': 'Лікар'},
+                {'name': 'Спорт'},
+                {'name': 'Страхування'},
+            ]
+        },
+        {
+            'name': 'Освіта',
+            'children': [
+                {'name': 'Книги'},
+                {'name': 'Курси'},
+                {'name': 'Канцелярія'},
+                {'name': 'Абонементи'},
+            ]
+        },
+        {
+            'name': 'Одяг',
+            'children': [
+                {'name': 'Взуття'},
+                {'name': 'Верхній одяг'},
+                {'name': 'Нижня білизна'},
+                {'name': 'Аксесуари'},
+            ]
         },
         {
             'name': 'Інше',
-            'description': 'Інші витрати'
-        }
+            'children': []
+        },
     ]
     
     for category_data in default_categories:
-        Category.objects.get_or_create(
+        parent, created = Category.objects.get_or_create(
             name=category_data['name'],
-            defaults={'description': category_data['description']}
+            defaults={}
         )
-
-@receiver(post_migrate)
-def create_default_categories_signal(sender, **kwargs):
-    if sender.name == 'finances':
-        from django.db import connection
-        if 'test' not in connection.settings_dict.get('NAME', ''):
-            try:
-                create_default_categories = __import__(
-                    'finances.migrations.0002_create_default_categories',
-                    fromlist=['']
-                ).create_default_categories
-                
-                from django.apps import apps
-                create_default_categories(apps, None)
-            except (ImportError, AttributeError):
-                try:
-                    from .models import Category
-                    
-                    default_categories = [
-                        {'name': 'Продукти', 'description': 'Витрати на продукти харчування'},
-                        {'name': 'Авто', 'description': 'Витрати на автомобіль: пальне, ремонт, страховка'},
-                        {'name': 'Одяг', 'description': 'Витрати на одяг та взуття'},
-                    ]
-                    
-                    for category_data in default_categories:
-                        Category.objects.get_or_create(
-                            name=category_data['name'],
-                            defaults={'description': category_data['description']}
-                        )
-                except:
-                    pass
+        
+        for child_data in category_data['children']:
+            Category.objects.get_or_create(
+                name=child_data['name'],
+                parent=parent,
+                defaults={}
+            )
