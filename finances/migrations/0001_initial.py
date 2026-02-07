@@ -16,53 +16,97 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Category',
+            name="Category",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='Назва категорії')),
-                ('description', models.TextField(blank=True, verbose_name='Опис категорії')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Дата створення')),
-                ('is_default', models.BooleanField(default=False, verbose_name='Категорія за замовчуванням')),
-                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='children', to='finances.category', verbose_name='Батьківська категорія')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=100, verbose_name="Назва категорії")),
+                ("description", models.TextField(blank=True, verbose_name="Опис категорії")),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="Дата створення")),
+                ("is_default", models.BooleanField(default=False, verbose_name="Категорія за замовчуванням")),
+                (
+                    "parent",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="children",
+                        to="finances.category",
+                        verbose_name="Батьківська категорія",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Категорія',
-                'verbose_name_plural': 'Категорії',
-                'ordering': ['name'],
+                "verbose_name": "Категорія",
+                "verbose_name_plural": "Категорії",
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='Table',
+            name="Table",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=100, verbose_name='Назва таблиці')),
-                ('color', models.CharField(default='#3B82F6', help_text='Колір у форматі HEX (#RRGGBB)', max_length=7, verbose_name='Колір')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Дата створення')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tables', to=settings.AUTH_USER_MODEL, verbose_name='Користувач')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("title", models.CharField(max_length=100, verbose_name="Назва таблиці")),
+                (
+                    "color",
+                    models.CharField(
+                        default="#3B82F6", help_text="Колір у форматі HEX (#RRGGBB)", max_length=7, verbose_name="Колір"
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="Дата створення")),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="tables",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Користувач",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Таблиця',
-                'verbose_name_plural': 'Таблиці',
-                'ordering': ['-created_at'],
+                "verbose_name": "Таблиця",
+                "verbose_name_plural": "Таблиці",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='Transaction',
+            name="Transaction",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Сума')),
-                ('currency', models.CharField(choices=[('UAH', 'Гривня (₴)'), ('USD', 'Долар США ($)'), ('EUR', 'Євро (€)')], default='UAH', max_length=3, verbose_name='Валюта')),
-                ('date', models.DateField(default=django.utils.timezone.now, verbose_name='Дата транзакції')),
-                ('description', models.TextField(blank=True, verbose_name='Опис транзакції')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Дата створення')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Дата оновлення')),
-                ('categories', models.ManyToManyField(blank=True, related_name='transactions', to='finances.category', verbose_name='Категорії')),
-                ('table', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transactions', to='finances.table', verbose_name='Таблиця')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("amount", models.DecimalField(decimal_places=2, max_digits=10, verbose_name="Сума")),
+                (
+                    "currency",
+                    models.CharField(
+                        choices=[("UAH", "Гривня (₴)"), ("USD", "Долар США ($)"), ("EUR", "Євро (€)")],
+                        default="UAH",
+                        max_length=3,
+                        verbose_name="Валюта",
+                    ),
+                ),
+                ("date", models.DateField(default=django.utils.timezone.now, verbose_name="Дата транзакції")),
+                ("description", models.TextField(blank=True, verbose_name="Опис транзакції")),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="Дата створення")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="Дата оновлення")),
+                (
+                    "categories",
+                    models.ManyToManyField(
+                        blank=True, related_name="transactions", to="finances.category", verbose_name="Категорії"
+                    ),
+                ),
+                (
+                    "table",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="transactions",
+                        to="finances.table",
+                        verbose_name="Таблиця",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Транзакція',
-                'verbose_name_plural': 'Транзакції',
-                'ordering': ['-date', '-created_at'],
+                "verbose_name": "Транзакція",
+                "verbose_name_plural": "Транзакції",
+                "ordering": ["-date", "-created_at"],
             },
         ),
     ]

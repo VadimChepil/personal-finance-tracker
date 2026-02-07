@@ -1,19 +1,20 @@
-from django.views.generic import CreateView, FormView
-from django.contrib.auth.views import LogoutView
 from django.contrib.auth import login
-from django.urls import reverse_lazy
+from django.contrib.auth.views import LogoutView
 from django.shortcuts import redirect
-from .forms import SignUpForm, SignInForm
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, FormView
+
+from .forms import SignInForm, SignUpForm
 
 
 class SignUpView(CreateView):
-    form_class = SignUpForm 
-    template_name = 'auth/registration.html'
-    success_url = reverse_lazy('home')
+    form_class = SignUpForm
+    template_name = "auth/registration.html"
+    success_url = reverse_lazy("home")
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect('home')
+            return redirect("home")
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -24,12 +25,12 @@ class SignUpView(CreateView):
 
 class SignInView(FormView):
     form_class = SignInForm
-    template_name = 'auth/login.html'
-    success_url = reverse_lazy('home')
+    template_name = "auth/login.html"
+    success_url = reverse_lazy("home")
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect('home')
+            return redirect("home")
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -38,4 +39,4 @@ class SignInView(FormView):
 
 
 class CustomLogoutView(LogoutView):
-    next_page = reverse_lazy('home')
+    next_page = reverse_lazy("home")
